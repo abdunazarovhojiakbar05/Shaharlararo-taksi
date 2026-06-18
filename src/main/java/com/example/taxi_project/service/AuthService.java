@@ -2,11 +2,10 @@ package com.example.taxi_project.service;
 
 import com.example.taxi_project.dto.auth.*;
 import com.example.taxi_project.model.User;
+import jakarta.xml.bind.ValidationException;
 
 public interface AuthService {
-    User data(String firstName, String username, String code);
-
-    String sendCode(String phone);
+    User data(String firstName, String username, String code, Long chatId) throws ValidationException;
 
     void logout(String token);
 
@@ -16,5 +15,4 @@ public interface AuthService {
 
     LoginResponseDto verifyOtpCode(VerifyOtpRequest requestDto);
 
-    SendOtpResponse login(SendOtpRequest requestDto);
-}
+ }

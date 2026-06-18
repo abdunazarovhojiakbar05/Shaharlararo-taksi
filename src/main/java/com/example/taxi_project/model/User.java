@@ -28,6 +28,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    private Long chat_id;
+
     private String username;
 
     private String name;
@@ -35,9 +37,11 @@ public class User {
 
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    private boolean is_active;
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
 
     private String code;
 

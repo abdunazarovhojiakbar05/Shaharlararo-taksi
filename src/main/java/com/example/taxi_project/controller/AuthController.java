@@ -24,20 +24,12 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "Ota-ona login send", description = "Ota-ona tizimga kirishi (kod olishi) uchun faqat email manzilini yuboradi.")
-    @PostMapping("/send")
-    public ResponseEntity<SendOtpResponse> send(@Valid @RequestBody SendOtpRequest requestDto) {
-        return ResponseEntity.ok(authService.login(requestDto));
-    }
-
 
     @Operation(summary = "Ota-ona login verify", description = "Ota-ona emailga kelgan maxfiy kod bilan emailni yuboradi va tizimga kiradi.")
     @PostMapping("/verify")
     public ResponseEntity<LoginResponseDto> verify(@Valid @RequestBody VerifyOtpRequest requestDto) {
         return ResponseEntity.ok(authService.verifyOtpCode(requestDto));
     }
-
-
 
 
     @Operation(summary = "Ota-ona ro'yxatdan o'tishi", description = "Yangi ota-ona akkaunti yaratadi va qurilma (device) ma'lumotlarini tizimda saqlaydi.")

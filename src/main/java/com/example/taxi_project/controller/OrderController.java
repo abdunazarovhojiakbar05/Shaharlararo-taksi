@@ -56,7 +56,6 @@ public class OrderController {
     }
 
 
-
     @PostMapping("/{id}/finish")
     @Operation(summary = " Safarni tugatish")
     public ResponseEntity<Order> finish(@PathVariable UUID id) {

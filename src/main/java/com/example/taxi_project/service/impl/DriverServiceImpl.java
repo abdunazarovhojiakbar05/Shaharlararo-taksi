@@ -1,17 +1,22 @@
 package com.example.taxi_project.service.impl;
 
+import com.example.taxi_project.dto.admin.DriverResponseDTO;
 import com.example.taxi_project.dto.driver.CarUpdate;
 import com.example.taxi_project.dto.driver.DriverResponse;
 import com.example.taxi_project.dto.driver.DriverUpdate;
 import com.example.taxi_project.enums.DriverStatus;
 import com.example.taxi_project.exceptions.ResourceNotFoundException;
+import com.example.taxi_project.model.Cars;
 import com.example.taxi_project.model.Driver;
+import com.example.taxi_project.repository.DriverCarsRepository;
 import com.example.taxi_project.repository.DriverRepository;
 import com.example.taxi_project.service.DriverService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -19,6 +24,7 @@ import java.util.UUID;
 public class DriverServiceImpl implements DriverService {
 
     private final DriverRepository driverRepository;
+    private final DriverCarsRepository driverCarsRepository;
 
     @Override
     public DriverResponse getById(UUID id) {
@@ -33,11 +39,6 @@ public class DriverServiceImpl implements DriverService {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + id));
 
-        // DriverUpdate ichida name, username va h.k. bo'lishi kerak
-        // Hozir bo'sh — quyidagilarni qo'shgandan keyin ishlaydi:
-        // if (updateDto.getName() != null) driver.setName(updateDto.getName());
-        // if (updateDto.getUsername() != null) driver.setUsername(updateDto.getUsername());
-
         Driver saved = driverRepository.save(driver);
         return toResponse(saved);
     }
@@ -47,11 +48,9 @@ public class DriverServiceImpl implements DriverService {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + id));
 
-        // Driver modeliga DriverStatus maydoni qo'shish kerak:
-        // driver.setStatus(status);
-        // driverRepository.save(driver);
+        driver.setStatus(status);
+        driverRepository.save(driver);
 
-        // Hozircha log:
         System.out.println("Haydovchi " + id + " holati o'zgardi: " + status);
     }
 
@@ -59,10 +58,7 @@ public class DriverServiceImpl implements DriverService {
     public BigDecimal getBalance(UUID id) {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + id));
-
-        // Driver modeliga balance maydoni qo'shish kerak:
-        // return driver.getBalance();
-        return BigDecimal.ZERO; // Hozircha
+        return BigDecimal.ZERO;
     }
 
     @Override
@@ -70,10 +66,9 @@ public class DriverServiceImpl implements DriverService {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + id));
 
-        // Car entity ga @Entity va @ManyToOne qo'shing, keyin:
-        // Car car = driver.getCar();
-        // if (carUpdateDto.getModel() != null) car.setModel(carUpdateDto.getModel());
-        // carRepository.save(car);
+        Cars car = driver.getCar();
+        if (carUpdateDto.getModel() != null) car.setModel(carUpdateDto.getModel());
+        driverCarsRepository.save(car);
 
         System.out.println("Haydovchi " + id + " mashinasi yangilandi");
     }
@@ -86,15 +81,36 @@ public class DriverServiceImpl implements DriverService {
         return driver.getRating();
     }
 
-    // Helper method
+    @Override
+    public void apply(long chatId, Map<String, String> data) {
+
+    }
+
+    @Override
+    public List<DriverResponseDTO> getAllPendingApplications() {
+            return List.of();
+    }
+
+    @Override
+    public void approveDriver(Long userId) {
+
+    }
+
+    @Override
+    public void rejectDriver(Long userId, String reason) {
+
+    }
+
     private DriverResponse toResponse(Driver driver) {
-        // DriverResponse hozir bo'sh — quyidagilarni qo'shing:
-        // return DriverResponse.builder()
-        //         .id(driver.getId())
-        //         .name(driver.getName())
-        //         .phone(driver.getPhone())
-        //         .rating(driver.getRating())
-        //         .build();
-        return new DriverResponse();
+
+        return DriverResponse.builder()
+                .id(driver.getId())
+                .name(driver.getName())
+                .username(driver.getUsername())
+                .phone(driver.getPhone())
+                .rating(driver.getRating())
+                .role(driver.getRole())
+                .is_active(driver.isActive())
+                .build();
     }
 }

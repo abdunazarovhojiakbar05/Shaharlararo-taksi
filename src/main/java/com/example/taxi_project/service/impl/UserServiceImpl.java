@@ -1,5 +1,6 @@
 package com.example.taxi_project.service.impl;
 
+import com.example.taxi_project.dto.user.DriverApplyRequest;
 import com.example.taxi_project.dto.user.UserResponse;
 import com.example.taxi_project.dto.user.UserUpdate;
 import com.example.taxi_project.exceptions.ResourceNotFoundException;
@@ -31,10 +32,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findUserById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi: " + id));
 
-        // UserUpdate ichida name, username bo'lishi kerak:
-        // if (updateDto.getName() != null) user.setName(updateDto.getName());
-        // if (updateDto.getUsername() != null) user.setUsername(updateDto.getUsername());
-
         User saved = userRepository.save(user);
         return toResponse(saved);
     }
@@ -44,8 +41,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findUserById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi: " + id));
 
-        // User modeliga balance qo'shish kerak:
-        // return user.getBalance();
         return BigDecimal.ZERO;
     }
 
@@ -58,10 +53,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findUserById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi: " + id));
 
-        // User modeliga balance qo'shish kerak:
-        // user.setBalance(user.getBalance().add(amount));
-        // userRepository.save(user);
-
         System.out.println("Balans to'ldirildi: " + amount + " -> foydalanuvchi " + id);
     }
 
@@ -70,12 +61,14 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findUserById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi: " + id));
 
-        // Soft delete (tavsiya):
-        user.set_active(false);
+        user.setActive(false);
         userRepository.save(user);
 
-        // Yoki to'liq o'chirish:
-        // userRepository.delete(user);
+    }
+
+    @Override
+    public void applyDriver(DriverApplyRequest request) {
+
     }
 
     private UserResponse toResponse(User user) {
@@ -86,7 +79,7 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .code(user.getCode())
                 .expired_at(user.getExpired_at())
-                .isIs_active(user.is_active())
+                .isIs_active(user.isActive())
                 .build();
     }
 }

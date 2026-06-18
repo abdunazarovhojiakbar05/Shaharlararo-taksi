@@ -1,6 +1,7 @@
 package com.example.taxi_project.controller;
 
 
+import com.example.taxi_project.dto.user.DriverApplyRequest;
 import com.example.taxi_project.dto.user.UserResponse;
 import com.example.taxi_project.dto.user.UserUpdate;
 import com.example.taxi_project.service.UserService;
@@ -60,5 +61,12 @@ public class UserController {
     public ResponseEntity<Void> deleteAccount(@PathVariable UUID id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @PostMapping("/request_driver")
+    public ResponseEntity<Void> applyDriver(@RequestBody DriverApplyRequest request) {
+        userService.applyDriver(request);
+        return ResponseEntity.ok().build();
     }
 }

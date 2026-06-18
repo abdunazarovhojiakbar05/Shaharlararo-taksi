@@ -99,6 +99,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         // ✅ to'g'rilandi — modelda isActive bo'lsa shu, bo'lmasa true
-        return isParent() ? user.is_active() : driver.is_active();
+        return isParent() ? user.isActive() : driver.isActive();
     }
 }

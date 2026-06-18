@@ -1,13 +1,19 @@
 package com.example.taxi_project.service.impl;
 
+import com.example.taxi_project.cofig.GlobalVar;
 import com.example.taxi_project.dto.auth.*;
+import com.example.taxi_project.enums.Platform;
+import com.example.taxi_project.enums.SessionStatus;
 import com.example.taxi_project.enums.UserRole;
 import com.example.taxi_project.exceptions.ResourceNotFoundException;
 import com.example.taxi_project.exceptions.UserAlreadyExistsException;
+import com.example.taxi_project.model.Session;
 import com.example.taxi_project.model.User;
+import com.example.taxi_project.repository.SessionRepository;
 import com.example.taxi_project.repository.UserRepository;
 import com.example.taxi_project.service.AuthService;
 import com.example.taxi_project.util.JwtUtils;
+import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,69 +27,38 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
+    private final SessionRepository sessionRepository;
 
     @Override
-    public User data(String firstName, String username, String code) {
-        if (firstName == null) firstName = "foydalanuvchi";
-        if (username == null) username = "foydalanuvchi";
-        if (code == null) throw new RuntimeException("Kod bo'sh bo'lmasligi kerak");
+    public User data(String firstName, String username, String code, Long chatId) throws ValidationException {
+        System.out.println("Kod: " + code);
+        if (code == null) throw new ValidationException("Kod bo'sh bo'lmasligi kerak");
 
-        User user = new User();
-        user.setName(firstName);
-        user.setUsername(username);
+        User user = userRepository.findByChatId(chatId).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setName(firstName);
+            newUser.setUsername(username);
+            newUser.setChat_id(chatId);
+            newUser.setRole(UserRole.USER);
+            return newUser;
+        });
+
         user.setCode(code);
-        user.setRole(UserRole.USER);
-        user.set_active(true);
+        user.setExpired_at(LocalDateTime.now().plusMinutes(5));
+        user.setActive(false);
 
         return userRepository.save(user);
     }
 
-    @Override
-    public String sendCode(String phone) {
-        // Generatsiya: 6 xonali random kod
-        String code = String.valueOf(100000 + new Random().nextInt(900000));
-        LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(5);
 
-        Optional<User> existing = userRepository.findUserByUsername(phone);
-        User user;
-        if (existing.isPresent()) {
-            user = existing.get();
-        } else {
-            user = new User();
-            user.setPhone(phone);
-            user.setRole(UserRole.USER);
-        }
-        user.setCode(code);
-        user.setExpired_at(expiredAt);
-        userRepository.save(user);
 
-        // TODO: SMS gateway orqali yuborish (Eskiz, Playmobile va h.k.)
-        System.out.println("SMS kodi: " + code + " -> " + phone);
-
-        return "Kod yuborildi: " + phone;
-    }
-
-    @Override
-    public SendOtpResponse login(SendOtpRequest requestDto) {
-        String phone = requestDto.getPhone();
-        if (phone == null || phone.isBlank()) {
-            throw new RuntimeException("Telefon raqami bo'sh bo'lishi mumkin emas");
-        }
-
-        // sendCode(phone);
-
-        return SendOtpResponse.builder()
-                .access_token(null)
-                .refresh_token(null)
-                .build();
-    }
 
     @Override
     public SendOtpResponse registration(RegistrationRequestDto requestDto) {
         String phone = requestDto.getPhone();
 
         Optional<User> existing = userRepository.findUserByUsername(phone);
-        if (existing.isPresent() && existing.get().is_active()) {
+        if (existing.isPresent() && existing.get().isActive()) {
             throw new UserAlreadyExistsException("Bu raqam allaqachon ro'yxatdan o'tgan: " + phone);
         }
 
@@ -95,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         user.setCode(code);
         user.setExpired_at(expiredAt);
         user.setRole(UserRole.USER);
-        user.set_active(false); // OTP tasdiqlanmaguncha false
+        user.setActive(false);
         userRepository.save(user);
 
 
@@ -110,23 +85,36 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponseDto verifyOtpCode(VerifyOtpRequest requestDto) {
 
+        System.out.println("Kod: " + requestDto.getCode());
 
-         User user = userRepository.findAll().stream()
-                .filter(u -> u.getCode() != null)
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
+        User user = userRepository.findByCode(requestDto.getCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Kod noto'g'ri"));
 
-        /* if (user.getExpired_at() == null || user.getExpired_at().isBefore(LocalDateTime.now())) {
+        System.out.println(user.getCode() + "  ||||||" + user.getExpired_at() != null?user.getExpired_at():"null");
+
+         if (user.getExpired_at() == null || user.getExpired_at().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Kod muddati o'tib ketgan");
-        }*/
+        }
 
-        user.set_active(true);
+        user.setActive(true);
         user.setCode("null");
         user.setExpired_at(null);
         userRepository.save(user);
 
         String access = jwtUtils.generateToken(user.getPhone());
         String refresh = jwtUtils.generateRefreshToken(user.getPhone());
+
+
+        Session session = Session.builder()
+                .user(user)
+                .driver(null)
+                .refreshToken(refresh)
+                .accessToken(access)
+                .expiresAt(LocalDateTime.now().plusDays(1))
+                .createdAt(LocalDateTime.now())
+                .platform(Platform.android)
+                .build();
+        sessionRepository.save(session);
 
         return LoginResponseDto.builder()
                 .name(user.getName())
@@ -149,17 +137,36 @@ public class AuthServiceImpl implements AuthService {
         String newAccess = jwtUtils.generateToken(phone);
         String newRefresh = jwtUtils.generateRefreshToken(phone);
 
-        return new RefreshTokenResponseDto();
+        return   RefreshTokenResponseDto.builder()
+                .refresh_token(newRefresh)
+                .access_token(newAccess)
+                .expires_in(900L)
+                .build();
     }
+
+
 
     @Override
     public void logout(String token) {
-        // Stateless JWT uchun — token blacklist yoki Redis kerak
-        // Hozircha validation qilish kifoya:
-        if (!jwtUtils.validateToken(token)) {
-            throw new RuntimeException("Token allaqachon yaroqsiz");
+
+        if (token == null) {
+            throw new  ResourceNotFoundException("data.not.found");
         }
-        // TODO: Redis ga token qo'shish (blacklist)
-        System.out.println("Logout bajarildi. Token bekor: " + token);
+
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        Session session = sessionRepository.findByAccessToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("session.not.found"));
+        session.setIsActive(false);
+        session.setSessionStatus(SessionStatus.expired);
+        session.setAccessToken(null);
+        session.setRefreshToken(null);
+        session.setRevokedAt(LocalDateTime.now());
+        sessionRepository.save(session);
+
+
+
     }
 }

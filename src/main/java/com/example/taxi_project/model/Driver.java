@@ -1,8 +1,8 @@
 package com.example.taxi_project.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
+import com.example.taxi_project.enums.DriverStatus;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -16,5 +16,12 @@ import lombok.experimental.SuperBuilder;
 public class Driver extends User{
 
     double rating;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "car_id")
+    Cars car;
+
+
+    DriverStatus status;
 
 }
