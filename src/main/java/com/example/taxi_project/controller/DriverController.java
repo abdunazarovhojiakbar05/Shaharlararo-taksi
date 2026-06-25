@@ -7,7 +7,10 @@ import com.example.taxi_project.dto.driver.DriverUpdate;
 import com.example.taxi_project.enums.DriverStatus;
 import com.example.taxi_project.service.DriverService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,23 +29,25 @@ public class DriverController {
 
     @Operation(summary = "Haydovchi profil ma'lumotlarini olish")
     @GetMapping("/{id}")
-    public ResponseEntity<DriverResponse> getProfile(@PathVariable UUID id) {
-        return ResponseEntity.ok(driverService.getById(id));
+    public ResponseEntity<DriverResponse> getProfile( @Valid @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(driverService.getById(userDetails));
     }
 
 
     @Operation(summary = "Haydovchi profilini tahrirlash")
     @PutMapping("/{id}")
     public ResponseEntity<DriverResponse> updateProfile(
-            @PathVariable UUID id,
+            @Valid
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody DriverUpdate updateDto) {
-        return ResponseEntity.ok(driverService.update(id, updateDto));
+        return ResponseEntity.ok(driverService.update(userDetails, updateDto));
     }
 
 
     @Operation(summary = "Haydovchi onlayn/oflayn statusini o'zgartirish")
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> changeStatus(
+            @Valid
             @PathVariable UUID id,
             @RequestParam DriverStatus status) {
         driverService.changeStatus(id, status);
@@ -52,7 +57,7 @@ public class DriverController {
 
     @Operation(summary = "Haydovchining joriy balansini ko'rish")
     @GetMapping("/{id}/balance")
-    public ResponseEntity<BigDecimal> getBalance(@PathVariable UUID id) {
+    public ResponseEntity<BigDecimal> getBalance( @Valid @PathVariable UUID id) {
         return ResponseEntity.ok(driverService.getBalance(id));
     }
 
@@ -60,6 +65,7 @@ public class DriverController {
     @Operation(summary = "Haydovchiga tegishli transport vositasi ma'lumotlarini yangilash")
     @PutMapping("/{id}/car")
     public ResponseEntity<Void> updateCarInfo(
+            @Valid
             @PathVariable UUID id,
             @RequestBody CarUpdate carUpdateDto) {
         driverService.updateCarInfo(id, carUpdateDto);
@@ -69,7 +75,7 @@ public class DriverController {
 
     @Operation(summary = "Haydovchining joriy reytingini olish")
     @GetMapping("/{id}/rating")
-    public ResponseEntity<Double> getRating(@PathVariable UUID id) {
+    public ResponseEntity<Double> getRating(@Valid  @PathVariable UUID id) {
         return ResponseEntity.ok(driverService.getRating(id));
     }
 }

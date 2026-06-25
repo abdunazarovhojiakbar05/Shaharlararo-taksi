@@ -15,6 +15,7 @@ import java.util.UUID;
 public class Cars {
 
     @Id
+            @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -27,5 +28,6 @@ public class Cars {
 
     Long price;
 
-    double summa;
-}
+    String picture;
+
+ }

@@ -18,5 +18,4 @@ public interface UserService {
 
     void delete(UUID id);
 
-    void applyDriver(DriverApplyRequest request);
-}
+ }

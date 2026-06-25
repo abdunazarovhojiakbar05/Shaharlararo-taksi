@@ -66,10 +66,6 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    @Override
-    public void applyDriver(DriverApplyRequest request) {
-
-    }
 
     private UserResponse toResponse(User user) {
         return UserResponse.builder()

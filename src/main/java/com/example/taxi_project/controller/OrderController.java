@@ -27,7 +27,7 @@ public class OrderController {
     public ResponseEntity<Order> create(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody OrderRequest request) {
-        return ResponseEntity.ok(orderService.createOrder(userDetails.getUser(), request.getFrom(), request.getTo()));
+        return ResponseEntity.ok(orderService.createOrder(userDetails.getUser(), request));
     }
 
     @GetMapping("/pending")
@@ -51,14 +51,18 @@ public class OrderController {
 
     @PostMapping("/{id}/start")
     @Operation(summary = " Safarni boshlash")
-    public ResponseEntity<Order> start(@PathVariable UUID id) {
-        return ResponseEntity.ok(orderService.startOrder(id));
+    public ResponseEntity<Order> start(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.startOrder(id, userDetails));
     }
 
 
     @PostMapping("/{id}/finish")
     @Operation(summary = " Safarni tugatish")
-    public ResponseEntity<Order> finish(@PathVariable UUID id) {
-        return ResponseEntity.ok(orderService.finishOrder(id));
+    public ResponseEntity<Order> finish(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.finishOrder(id, userDetails));
     }
 }

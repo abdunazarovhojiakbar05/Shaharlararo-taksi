@@ -43,8 +43,8 @@ public class AuthBot extends TelegramLongPollingBot {
     private static final String digits = "0123456789";
     private static final SecureRandom random = new SecureRandom();
 
-    private final Map<Long, BotState> userStateMap = new HashMap<>();
-    private final Map<Long, Map<String, String>> userDataMap = new HashMap<>();
+     private final Map<Long, BotState> userStateMap = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<Long, Map<String, String>> userDataMap = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
     public String getBotToken() { return botToken; }
@@ -55,7 +55,6 @@ public class AuthBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        // 1. TUGMA (CALLBACK QUERY) BOSILGANDA
         if (update.hasCallbackQuery()) {
             handleCallbackQuery(update);
             return;
@@ -64,7 +63,6 @@ public class AuthBot extends TelegramLongPollingBot {
         if (!update.hasMessage()) return;
         long chatId = update.getMessage().getChatId();
 
-        // 2. MATN KELGANDA
         if (update.getMessage().hasText()) {
             String text = update.getMessage().getText();
 
@@ -80,7 +78,6 @@ public class AuthBot extends TelegramLongPollingBot {
             }
         }
 
-        // 3. RASM KELGANDA
         if (update.getMessage().hasPhoto()) {
             BotState state = userStateMap.get(chatId);
             if (state != null) {
@@ -92,7 +89,6 @@ public class AuthBot extends TelegramLongPollingBot {
         }
     }
 
-    // /start buyrug'i - Faqat kod beradi va haydovchi bo'lish tugmasini ko'rsatadi
     private void handleStartCommand(Update update, long chatId) {
         org.telegram.telegrambots.meta.api.objects.User tgUser = update.getMessage().getFrom();
         String firstName = tgUser.getFirstName();
@@ -133,32 +129,28 @@ public class AuthBot extends TelegramLongPollingBot {
         }
     }
 
-    // Tugma bosilganda ishlaydigan metod
     private void handleCallbackQuery(Update update) {
         String callData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
 
         if (callData.equals("register_as_driver")) {
-            // Haydovchi bo'lishni xohladi, stepni boshlaymiz
             userStateMap.put(chatId, BotState.UPLOAD_PASSPORT_IMG);
             sendMessage(chatId, "📸 Bo'ldi, boshladik! Birinchi bo'lib Pasportingiz rasmini yuboring:");
         }
     }
 
-    // Mashina modelini qabul qilish
     private void handleCarModelInput(String carModel, long chatId) {
-        Map<String, String> data = userDataMap.getOrDefault(chatId, new HashMap<>());
-        data.put("car_model", carModel);
+
+        Map<String, String> data = userDataMap.getOrDefault(chatId, new java.util.concurrent.ConcurrentHashMap<>());        data.put("car_model", carModel);
         userDataMap.put(chatId, data);
 
         userStateMap.put(chatId, BotState.UPLOAD_CAR_IMG);
-        sendMessage(chatId, "📸 Mashina rasmini yuboring:");
+        sendMessage(chatId, "📸 Mashina rasmini yuboring\nmashina raqami aniq korinsin!");
     }
 
-    // Rasmlarni qabul qilish (Step-by-Step)
     private void handlePhotoInput(BotState state, String fileId, long chatId) {
-        Map<String, String> data = userDataMap.getOrDefault(chatId, new HashMap<>());
 
+        Map<String, String> data = userDataMap.getOrDefault(chatId, new java.util.concurrent.ConcurrentHashMap<>());
         if (state == BotState.UPLOAD_PASSPORT_IMG) {
             data.put("passport_image", fileId);
             userDataMap.put(chatId, data);
@@ -171,24 +163,24 @@ public class AuthBot extends TelegramLongPollingBot {
             userStateMap.put(chatId, BotState.ENTER_CAR_MODEL);
             sendMessage(chatId, "🚗 Mashina modelini kiriting (masalan: Nexia 3):");
 
-        } else if (state == BotState.UPLOAD_CAR_IMG) {
+         } else if (state == BotState.UPLOAD_CAR_IMG) {
             data.put("car_image", fileId);
             userDataMap.put(chatId, data);
 
             try {
                 driverService.apply(chatId, data);
+                userDataMap.remove(chatId);
+                userStateMap.remove(chatId);
+
                 sendMessage(chatId, "✅ Arizangiz muvaffaqiyatli yuborildi! Administratorlar ko'rib chiqib javobini yuborishadi.");
             } catch (Exception e) {
                 log.error("Haydovchi arizasini saqlashda xatolik: ", e);
-                sendMessage(chatId, "❌ Arizani yuborishda xatolik yuz berdi. Qaytadan urinib ko'ring.");
-            } finally {
-                userDataMap.remove(chatId);
-                userStateMap.remove(chatId);
+                sendMessage(chatId, "❌ Arizani yuborishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
             }
+
         }
     }
 
-    // Oddiy xabar yuborish
     public void sendMessage(long chatId, String text) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -201,7 +193,6 @@ public class AuthBot extends TelegramLongPollingBot {
         }
     }
 
-    // Tagida "Haydovchi bo'lish" tugmasi bor xabarni yuborish
     private void sendDriverRegistrationMenu(long chatId, String text) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);

@@ -1,10 +1,13 @@
 package com.example.taxi_project.service.impl;
 
+import com.example.taxi_project.dto.order.OrderRequest;
 import com.example.taxi_project.enums.OrderStatus;
+import com.example.taxi_project.exceptions.ValidationException;
 import com.example.taxi_project.model.Driver;
 import com.example.taxi_project.model.Order;
 import com.example.taxi_project.model.User;
 import com.example.taxi_project.repository.OrderRepository;
+import com.example.taxi_project.security.CustomUserDetails;
 import com.example.taxi_project.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,11 +23,13 @@ public class OrderServiceImpl  implements OrderService {
     private final OrderRepository orderRepository;
 
     @Override
-    public Order createOrder(User user, String from, String to) {
+    public Order createOrder(User user, OrderRequest request) {
         Order order = new Order();
         order.setUser(user);
-        order.setFromLocation(from);
-        order.setToLocation(to);
+        order.setFromLat(request.getFromLat());
+        order.setFromLon(request.getFromLon());
+        order.setToLat(request.getToLat());
+        order.setToLon(request.getToLon());
         order.setStatus(OrderStatus.pending);
         order.setCreatedAt(LocalDateTime.now());
         return orderRepository.save(order);
@@ -51,16 +56,31 @@ public class OrderServiceImpl  implements OrderService {
     }
 
     @Override
-     public Order startOrder(UUID orderId) {
+     public Order startOrder(UUID orderId, CustomUserDetails userDetails) {
+
+        Driver driver = userDetails.getDriver();
+
+
         Order order = orderRepository.findById(orderId).orElseThrow();
+
+        if(!order.getDriver().getId().equals(driver.getId())) throw new ValidationException("Buyurtma topilmadi");
+
         order.setStatus(OrderStatus.in_progress);
+
         order.setStartedAt(LocalDateTime.now());
+
         return orderRepository.save(order);
     }
 
     @Override
-     public Order finishOrder(UUID orderId) {
+     public Order finishOrder(UUID orderId, CustomUserDetails userDetails) {
+
+        Driver driver = userDetails.getDriver();
+
         Order order = orderRepository.findById(orderId).orElseThrow();
+
+        if(!order.getDriver().getId().equals(driver.getId())) throw new ValidationException("Buyurtma topilmadi");
+
         order.setStatus(OrderStatus.finished);
         order.setFinishedAt(LocalDateTime.now());
         return orderRepository.save(order);

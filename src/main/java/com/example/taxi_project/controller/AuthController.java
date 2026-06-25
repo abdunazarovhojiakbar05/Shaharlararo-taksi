@@ -48,7 +48,7 @@ public class AuthController {
 
     @Operation(summary = "Tizimdan chiqish", description = "Foydalanuvchining faol tokenini bekor qiladi.")
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(
+    public ResponseEntity<String> logout( @Valid
             @RequestHeader("Authorization") String authHeader) throws BadRequestException {
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {

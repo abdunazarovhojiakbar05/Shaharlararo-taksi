@@ -3,6 +3,7 @@ package com.example.taxi_project.model;
 
 
 
+import com.example.taxi_project.enums.ApplicationStatus;
 import com.example.taxi_project.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,8 +21,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "users_type")
 @Entity( name = "users")
 public class User {
     @Id
@@ -35,6 +34,11 @@ public class User {
     private String name;
 
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "car_id")
+    private Cars cars;
+
+
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -46,6 +50,14 @@ public class User {
     private String code;
 
     private LocalDateTime expired_at;
+
+    private ApplicationStatus status_application;
+
+    private int count_application_status;
+
+    private String passport_image;
+
+    private String licence_image;
 
 
 

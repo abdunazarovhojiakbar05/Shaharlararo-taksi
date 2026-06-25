@@ -5,6 +5,8 @@ import com.example.taxi_project.dto.driver.CarUpdate;
 import com.example.taxi_project.dto.driver.DriverResponse;
 import com.example.taxi_project.dto.driver.DriverUpdate;
 import com.example.taxi_project.enums.DriverStatus;
+import jakarta.xml.bind.ValidationException;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,9 +14,9 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface DriverService {
-    DriverResponse getById(UUID id);
+    DriverResponse getById(UserDetails userDetails);
 
-    DriverResponse update(UUID id, DriverUpdate updateDto);
+    DriverResponse update(UserDetails userDetails, DriverUpdate updateDto);
 
 
     void changeStatus(UUID id, DriverStatus status);
@@ -29,7 +31,7 @@ public interface DriverService {
 
     List<DriverResponseDTO> getAllPendingApplications();
 
-    void approveDriver(Long userId);
+    void approveDriver(UUID userId) throws ValidationException;
 
-    void rejectDriver(Long userId, String reason);
+    void rejectDriver(UUID userId, String reason);
 }

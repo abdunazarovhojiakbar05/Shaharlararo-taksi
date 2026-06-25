@@ -1,6 +1,7 @@
 package com.example.taxi_project.dto.order;
 
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -8,8 +9,11 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class OrderRequest {
+@NotBlank
+ public class OrderRequest {
 
-    String from;
-    String to;
+    private Double fromLat;
+    private Double fromLon;
+    private Double toLat;
+    private Double toLon;
 }

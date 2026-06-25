@@ -31,9 +31,10 @@ public class Order {
     @JoinColumn(name = "driver_id", nullable = true)
     private Driver driver;
 
-    private String fromLocation;
-
-    private String toLocation;
+    private Double fromLat;
+    private Double fromLon;
+    private Double toLat;
+    private Double toLon;
 
 
     private Double price;

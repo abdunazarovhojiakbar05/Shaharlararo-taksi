@@ -63,10 +63,4 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @PostMapping("/request_driver")
-    public ResponseEntity<Void> applyDriver(@RequestBody DriverApplyRequest request) {
-        userService.applyDriver(request);
-        return ResponseEntity.ok().build();
-    }
 }

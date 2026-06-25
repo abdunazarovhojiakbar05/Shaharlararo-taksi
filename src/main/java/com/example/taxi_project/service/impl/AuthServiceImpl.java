@@ -90,14 +90,13 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByCode(requestDto.getCode())
                 .orElseThrow(() -> new ResourceNotFoundException("Kod noto'g'ri"));
 
-        System.out.println(user.getCode() + "  ||||||" + user.getExpired_at() != null?user.getExpired_at():"null");
 
-         if (user.getExpired_at() == null || user.getExpired_at().isBefore(LocalDateTime.now())) {
+        if (user.getExpired_at() == null || user.getExpired_at().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Kod muddati o'tib ketgan");
         }
 
         user.setActive(true);
-        user.setCode("null");
+        user.setCode("");
         user.setExpired_at(null);
         userRepository.save(user);
 
