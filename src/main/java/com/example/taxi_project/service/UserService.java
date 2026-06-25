@@ -12,9 +12,6 @@ public interface UserService {
 
     UserResponse update(UUID id, UserUpdate updateDto);
 
-    BigDecimal getBalance(UUID id);
-
-    void topUpBalance(UUID id, BigDecimal amount);
 
     void delete(UUID id);
 

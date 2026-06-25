@@ -5,6 +5,7 @@ import com.example.taxi_project.dto.driver.CarUpdate;
 import com.example.taxi_project.dto.driver.DriverResponse;
 import com.example.taxi_project.dto.driver.DriverUpdate;
 import com.example.taxi_project.enums.DriverStatus;
+import com.example.taxi_project.security.CustomUserDetails;
 import com.example.taxi_project.service.DriverService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -28,54 +29,54 @@ public class DriverController {
     private final DriverService driverService;
 
     @Operation(summary = "Haydovchi profil ma'lumotlarini olish")
-    @GetMapping("/{id}")
-    public ResponseEntity<DriverResponse> getProfile( @Valid @AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping()
+    public ResponseEntity<DriverResponse> getProfile( @Valid @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(driverService.getById(userDetails));
     }
 
 
     @Operation(summary = "Haydovchi profilini tahrirlash")
-    @PutMapping("/{id}")
+    @PutMapping()
     public ResponseEntity<DriverResponse> updateProfile(
             @Valid
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody DriverUpdate updateDto) {
         return ResponseEntity.ok(driverService.update(userDetails, updateDto));
     }
 
 
     @Operation(summary = "Haydovchi onlayn/oflayn statusini o'zgartirish")
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/status")
     public ResponseEntity<Void> changeStatus(
             @Valid
-            @PathVariable UUID id,
+           CustomUserDetails userDetails,
             @RequestParam DriverStatus status) {
-        driverService.changeStatus(id, status);
+        driverService.changeStatus(userDetails, status);
         return ResponseEntity.ok().build();
     }
 
 
     @Operation(summary = "Haydovchining joriy balansini ko'rish")
-    @GetMapping("/{id}/balance")
-    public ResponseEntity<BigDecimal> getBalance( @Valid @PathVariable UUID id) {
-        return ResponseEntity.ok(driverService.getBalance(id));
+    @GetMapping("/balance")
+    public ResponseEntity<BigDecimal> getBalance( @Valid @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(driverService.getBalance(userDetails));
     }
 
 
     @Operation(summary = "Haydovchiga tegishli transport vositasi ma'lumotlarini yangilash")
-    @PutMapping("/{id}/car")
+    @PutMapping("/car")
     public ResponseEntity<Void> updateCarInfo(
             @Valid
-            @PathVariable UUID id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CarUpdate carUpdateDto) {
-        driverService.updateCarInfo(id, carUpdateDto);
+        driverService.updateCarInfo(userDetails.getDriver().getId(), carUpdateDto);
         return ResponseEntity.ok().build();
     }
 
 
     @Operation(summary = "Haydovchining joriy reytingini olish")
-    @GetMapping("/{id}/rating")
-    public ResponseEntity<Double> getRating(@Valid  @PathVariable UUID id) {
-        return ResponseEntity.ok(driverService.getRating(id));
+    @GetMapping("/rating")
+    public ResponseEntity<Double> getRating(@Valid  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(driverService.getRating(userDetails.getDriver().getId()));
     }
 }

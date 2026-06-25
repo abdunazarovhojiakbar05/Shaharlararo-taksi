@@ -55,4 +55,6 @@ public class Driver {
 
     DriverStatus status;
 
+     private Double currentLat;
+     private Double currentLon;
 }

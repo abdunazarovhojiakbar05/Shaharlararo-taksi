@@ -1,5 +1,6 @@
 package com.example.taxi_project.service;
 
+import com.example.taxi_project.dto.driver.DriverTripResponse;
 import com.example.taxi_project.dto.order.OrderRequest;
 import com.example.taxi_project.enums.OrderStatus;
 import com.example.taxi_project.model.Driver;
@@ -17,7 +18,9 @@ public interface OrderService {
 
     Order createOrder(User user, OrderRequest request);
 
-    Order acceptOrder(UUID id, Driver driver);
+    DriverTripResponse acceptOrder(UUID id, Driver driver);
 
     List<Order> findByStatus(OrderStatus orderStatus);
+
+    List<Order> getDriverCurrentRoute(CustomUserDetails userDetails, double currentLat, double currentLon);
 }

@@ -1,5 +1,6 @@
 package com.example.taxi_project.service.impl;
 
+import com.example.taxi_project.dto.driver.DriverTripResponse;
 import com.example.taxi_project.dto.order.OrderRequest;
 import com.example.taxi_project.enums.OrderStatus;
 import com.example.taxi_project.exceptions.ValidationException;
@@ -13,17 +14,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class OrderServiceImpl  implements OrderService {
+public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private static final double MAX_PICKUP_RADIUS_METERS = 3000.0;
 
     @Override
     public Order createOrder(User user, OrderRequest request) {
+
         Order order = new Order();
         order.setUser(user);
         order.setFromLat(request.getFromLat());
@@ -32,11 +36,47 @@ public class OrderServiceImpl  implements OrderService {
         order.setToLon(request.getToLon());
         order.setStatus(OrderStatus.pending);
         order.setCreatedAt(LocalDateTime.now());
-        return orderRepository.save(order);
+
+        String tempGroupId = UUID.randomUUID().toString();
+        order.setGroupId(tempGroupId);
+
+        order = orderRepository.save(order);
+
+        List<Order>  activePendingOrders = orderRepository.findByStatus(OrderStatus.pending);
+        List<Order> matchInGroup = new ArrayList<>();
+        matchInGroup.add(order);
+
+        for (Order existingOrder : activePendingOrders) {
+
+            if(existingOrder.getId().equals(order.getId())) continue;
+
+            double pickupDistance = calculateHaversineDistance(order.getFromLat(), order.getFromLon(), existingOrder.getFromLat(), existingOrder.getFromLon());
+
+            double dropoffDistance = calculateHaversineDistance(order.getToLat(), order.getToLon(), existingOrder.getToLat(), existingOrder.getToLon());
+
+            if(pickupDistance <= MAX_PICKUP_RADIUS_METERS && dropoffDistance <= 15000.0){
+                matchInGroup.add(existingOrder);
+                if(matchInGroup.size() == 4){
+                    break;
+                }
+            }
+
+        }
+
+        if(matchInGroup.size() == 4){
+            String groupId = UUID.randomUUID().toString();
+            for (Order match : matchInGroup) {
+                match.setGroupId(groupId);
+                orderRepository.save(match);
+            }
+        }
+
+       return order;
+
     }
 
     @Override
-     public Order acceptOrder(UUID orderId, Driver driver) {
+    public DriverTripResponse acceptOrder(UUID orderId, Driver driver) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Buyurtma topilmadi"));
 
@@ -44,11 +84,37 @@ public class OrderServiceImpl  implements OrderService {
             throw new RuntimeException("Buyurtma allaqachon qabul qilingan!");
         }
 
-        order.setDriver(driver);
-        order.setStatus(OrderStatus.accepted);
-        order.setAcceptedAt(LocalDateTime.now());
-        return orderRepository.save(order);
+        String groupId = order.getGroupId();
+        List<Order> optimizedPickup = new ArrayList<>();
+        List<Order> optimizedDelivery = new ArrayList<>();
+
+        if (groupId != null) {
+             List<Order> groupOrders = orderRepository.findByGroupId(groupId);
+            for (Order gOrder : groupOrders) {
+                gOrder.setDriver(driver);
+                gOrder.setStatus(OrderStatus.accepted);
+                gOrder.setAcceptedAt(LocalDateTime.now());
+                orderRepository.save(gOrder);
+            }
+
+             double driverLat = driver.getCurrentLat();
+            double driverLon = driver.getCurrentLon();
+
+             optimizedPickup = getOptimizedPickupRoute(driverLat, driverLon, groupId);
+            optimizedDelivery = getOptimizedDeliveryRoute(optimizedPickup);
+        } else {
+             order.setDriver(driver);
+            order.setStatus(OrderStatus.accepted);
+            order.setAcceptedAt(LocalDateTime.now());
+            Order saved = orderRepository.save(order);
+            optimizedPickup.add(saved);
+            optimizedDelivery.add(saved);
+            groupId = "single_" + saved.getId();
+        }
+
+         return new DriverTripResponse(groupId, optimizedPickup, optimizedDelivery);
     }
+
 
     @Override
     public List<Order> findByStatus(OrderStatus orderStatus) {
@@ -56,14 +122,14 @@ public class OrderServiceImpl  implements OrderService {
     }
 
     @Override
-     public Order startOrder(UUID orderId, CustomUserDetails userDetails) {
+    public Order startOrder(UUID orderId, CustomUserDetails userDetails) {
 
         Driver driver = userDetails.getDriver();
 
 
         Order order = orderRepository.findById(orderId).orElseThrow();
 
-        if(!order.getDriver().getId().equals(driver.getId())) throw new ValidationException("Buyurtma topilmadi");
+        if (!order.getDriver().getId().equals(driver.getId())) throw new ValidationException("Buyurtma topilmadi");
 
         order.setStatus(OrderStatus.in_progress);
 
@@ -73,16 +139,100 @@ public class OrderServiceImpl  implements OrderService {
     }
 
     @Override
-     public Order finishOrder(UUID orderId, CustomUserDetails userDetails) {
+    public Order finishOrder(UUID orderId, CustomUserDetails userDetails) {
 
         Driver driver = userDetails.getDriver();
 
         Order order = orderRepository.findById(orderId).orElseThrow();
 
-        if(!order.getDriver().getId().equals(driver.getId())) throw new ValidationException("Buyurtma topilmadi");
+        if (!order.getDriver().getId().equals(driver.getId())) throw new ValidationException("Buyurtma topilmadi");
 
         order.setStatus(OrderStatus.finished);
         order.setFinishedAt(LocalDateTime.now());
         return orderRepository.save(order);
+    }
+
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        double earthRadius = 6371000; // metrda
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadius * c;
+    }
+
+     public List<Order> getOptimizedPickupRoute(double driverLat, double driverLon, String groupId) {
+        List<Order> remainingOrders = orderRepository.findByGroupId(groupId);
+        List<Order> optimizedRoute = new ArrayList<>();
+
+         double currentLat = driverLat;
+        double currentLon = driverLon;
+
+        while (!remainingOrders.isEmpty()) {
+            Order closestOrder = null;
+            double minDistance = Double.MAX_VALUE;
+            int closestIndex = -1;
+
+             for (int i = 0; i < remainingOrders.size(); i++) {
+                Order order = remainingOrders.get(i);
+                double distance = calculateHaversineDistance(
+                        currentLat, currentLon,
+                        order.getFromLat(), order.getFromLon()
+                );
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestOrder = order;
+                    closestIndex = i;
+                }
+            }
+
+             if (closestOrder != null) {
+                optimizedRoute.add(closestOrder);
+                remainingOrders.remove(closestIndex);
+
+                 currentLat = closestOrder.getFromLat();
+                currentLon = closestOrder.getFromLon();
+            }
+        }
+
+        return optimizedRoute;
+    }
+
+    public List<Order> getOptimizedDeliveryRoute(List<Order> groupOrders) {
+        List<Order> sortedDelivery = new ArrayList<>(groupOrders);
+
+
+        sortedDelivery.sort((o1, o2) -> {
+             double startLat = groupOrders.get(0).getFromLat();
+            double startLon = groupOrders.get(0).getFromLon();
+
+            double dist1 = calculateHaversineDistance(startLat, startLon, o1.getToLat(), o1.getToLon());
+            double dist2 = calculateHaversineDistance(startLat, startLon, o2.getToLat(), o2.getToLon());
+
+            return Double.compare(dist1, dist2);
+        });
+
+        return sortedDelivery;
+    }
+
+    @Override
+    public List<Order> getDriverCurrentRoute(CustomUserDetails userDetails, double currentLat, double currentLon) {
+        Driver driver = userDetails.getDriver();
+
+
+        List<Order> activeOrders = orderRepository.findByDriverAndStatus(driver, OrderStatus.accepted);
+
+        if (activeOrders.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String groupId = activeOrders.get(0).getGroupId();
+
+         return getOptimizedPickupRoute(currentLat, currentLon, groupId);
     }
 }

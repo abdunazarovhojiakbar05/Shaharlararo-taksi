@@ -20,7 +20,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -141,7 +140,8 @@ public class AuthBot extends TelegramLongPollingBot {
 
     private void handleCarModelInput(String carModel, long chatId) {
 
-        Map<String, String> data = userDataMap.getOrDefault(chatId, new java.util.concurrent.ConcurrentHashMap<>());        data.put("car_model", carModel);
+        Map<String, String> data = userDataMap.getOrDefault(chatId, new java.util.concurrent.ConcurrentHashMap<>());
+        data.put("car_model", carModel);
         userDataMap.put(chatId, data);
 
         userStateMap.put(chatId, BotState.UPLOAD_CAR_IMG);
@@ -200,12 +200,13 @@ public class AuthBot extends TelegramLongPollingBot {
         sendMessage.setParseMode("HTML");
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
         InlineKeyboardButton button = new InlineKeyboardButton();
         button.setText("🚖 Haydovchi bo'lib ro'yxatdan o'tish");
-        button.setCallbackData("register_as_driver"); // Bosilganda shu data keladi
+        button.setCallbackData("register_as_driver");
 
         rowInline.add(button);
         rowsInline.add(rowInline);

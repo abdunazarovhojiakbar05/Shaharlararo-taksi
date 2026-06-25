@@ -35,11 +35,16 @@ public class SecurityConfig {
                                 "/swagger-resources/**", "/webjars/**",
                                 "/error"
                          ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/registration").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/verify").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/driver/**").hasRole("DRIVER")
+                        .requestMatchers("/api/v1/user/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/pending").hasRole("DRIVER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/accept").hasRole("DRIVER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/start").hasRole("DRIVER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/finish").hasRole("DRIVER")
+                        .anyRequest().authenticated()
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

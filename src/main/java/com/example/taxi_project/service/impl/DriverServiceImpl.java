@@ -15,6 +15,7 @@ import com.example.taxi_project.model.User;
 import com.example.taxi_project.repository.DriverCarsRepository;
 import com.example.taxi_project.repository.DriverRepository;
 import com.example.taxi_project.repository.UserRepository;
+import com.example.taxi_project.security.CustomUserDetails;
 import com.example.taxi_project.service.DriverService;
 import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -60,20 +61,20 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public void changeStatus(UUID id, DriverStatus status) {
-        Driver driver = driverRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + id));
+    public void changeStatus(CustomUserDetails userDetails, DriverStatus status) {
+        Driver driver = driverRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + userDetails.getDriver().getId()));
 
         driver.setStatus(status);
         driverRepository.save(driver);
 
-        System.out.println("Haydovchi " + id + " holati o'zgardi: " + status);
+        System.out.println("Haydovchi " + userDetails.getDriver().getId() + " holati o'zgardi: " + status);
     }
 
     @Override
-    public BigDecimal getBalance(UUID id) {
-        Driver driver = driverRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + id));
+    public BigDecimal getBalance(CustomUserDetails userDetails) {
+        Driver driver = driverRepository.findById(userDetails.getDriver().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Haydovchi topilmadi: " + userDetails.getDriver().getId()));
 
 
         return BigDecimal.ZERO;

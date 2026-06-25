@@ -36,25 +36,7 @@ public class UserServiceImpl implements UserService {
         return toResponse(saved);
     }
 
-    @Override
-    public BigDecimal getBalance(UUID id) {
-        User user = userRepository.findUserById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi: " + id));
 
-        return BigDecimal.ZERO;
-    }
-
-    @Override
-    public void topUpBalance(UUID id, BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("To'ldirish summasi 0 dan katta bo'lishi kerak");
-        }
-
-        User user = userRepository.findUserById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi: " + id));
-
-        System.out.println("Balans to'ldirildi: " + amount + " -> foydalanuvchi " + id);
-    }
 
     @Override
     public void delete(UUID id) {
