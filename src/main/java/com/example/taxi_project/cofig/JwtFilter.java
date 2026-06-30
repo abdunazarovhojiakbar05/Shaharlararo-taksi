@@ -80,7 +80,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception e) {
-                log.warn("JWT token tekshirishda xatolik: {}", e.getMessage());
+                e.printStackTrace();
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write(

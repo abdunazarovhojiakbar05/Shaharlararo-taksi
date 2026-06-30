@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*") // <-- SHU QATORNI QO'SHING
 @Tag(name = "Autentifikatsiya", description = "Tizimga kirish va ro'yxatdan o'tish API-lari")
 public class AuthController {
 
@@ -32,12 +33,6 @@ public class AuthController {
     }
 
 
-    @Operation(summary = "Ota-ona ro'yxatdan o'tishi", description = "Yangi ota-ona akkaunti yaratadi va qurilma (device) ma'lumotlarini tizimda saqlaydi.")
-    @PostMapping("/registration")
-    public ResponseEntity<SendOtpResponse> registration(@Valid @RequestBody RegistrationRequestDto requestDto) {
-        SendOtpResponse response = authService.registration(requestDto);
-        return ResponseEntity.ok(response);
-    }
 
     @Operation(summary = "Refresh token", description = "Eski yoki muddati tugayotgan refresh token orqali yangi access token va refresh token oladi.")
     @PostMapping("/refresh")

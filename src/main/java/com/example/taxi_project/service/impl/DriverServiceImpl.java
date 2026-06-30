@@ -111,7 +111,7 @@ public class DriverServiceImpl implements DriverService {
         Cars car = new Cars();
 
         data.forEach((key, value) -> {
-            if (key.equals("model")) {
+            if (key.equals("car_model")) {
                 car.setModel(value);
             }
             if (key.equals("passport_image")) {
@@ -124,11 +124,11 @@ public class DriverServiceImpl implements DriverService {
                 car.setPicture(value);
             }
         });
+        driverCarsRepository.save(car);
+
         user.setStatus_application(ApplicationStatus.PENDING);
         user.setCars(car);
-
         usersRepository.save(user);
-        driverCarsRepository.save(car);
 
     }
 
@@ -139,7 +139,13 @@ public class DriverServiceImpl implements DriverService {
         List<DriverResponseDTO> list = new ArrayList<>();
         for (User user : all) {
 
-                 DriverResponseDTO driverResponseDTO = new DriverResponseDTO();
+                 DriverResponseDTO driverResponseDTO = DriverResponseDTO.builder()
+                         .name(user.getName())
+                         .phone(user.getPhone())
+                         .passport_image(user.getPassport_image())
+                         .licence_image(user.getLicence_image())
+                         .build();
+
                 list.add(driverResponseDTO);
         }
 
@@ -153,7 +159,7 @@ public class DriverServiceImpl implements DriverService {
         User user = usersRepository.findUserById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
 
-        if (driverRepository.existsById(userId)) {
+        if (driverRepository.existsByPhone((user.getPhone()))) {
             throw new UserAlreadyExistsException("driver.already.approved");
         }
 

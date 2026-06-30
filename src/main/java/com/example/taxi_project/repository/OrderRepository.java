@@ -13,8 +13,11 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByStatus(OrderStatus orderStatus);
 
-     @Query("SELECT o FROM Order o WHERE o.GroupId = :groupId")
+     @Query("SELECT o FROM Order o WHERE o.groupId = :groupId")
     List<Order> findByGroupId(@Param("groupId") String groupId);
 
     List<Order> findByDriverAndStatus(Driver driver, OrderStatus orderStatus);
+
+
+    List<Order> findByUserId(UUID userId);
 }

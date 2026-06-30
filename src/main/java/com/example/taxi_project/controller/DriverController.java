@@ -45,11 +45,11 @@ public class DriverController {
     }
 
 
-    @Operation(summary = "Haydovchi onlayn/oflayn statusini o'zgartirish")
+
     @PatchMapping("/status")
     public ResponseEntity<Void> changeStatus(
             @Valid
-           CustomUserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam DriverStatus status) {
         driverService.changeStatus(userDetails, status);
         return ResponseEntity.ok().build();

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avtorizatsiya | Taxi Project</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="logo-circle"></div>
+
+    <a href="https://t.me/shaharlar_aro_bot" target="_blank" class="bot-link">
+        @shaharlar_aro_bot
+    </a>
+
+    <p class="hint-text">Botga kiring, tasdiqlash kodini oling va pastga kiriting:</p>
+
+    <div class="input-wrapper">
+        <input type="text" id="otpCode" placeholder="••••••" maxlength="6" autocomplete="off">
+    </div>
+
+    <div class="timer-box">
+        Kodni kiritish vaqti: <span id="countdown">05:00</span>
+    </div>
+
+    <button id="submitBtn" onclick="verifyCode()">Submit</button>
+
+    <div id="messageBox" class="message-box"></div>
+</div>
+
+<script src="auth.js"></script>
+</body>
+</html>

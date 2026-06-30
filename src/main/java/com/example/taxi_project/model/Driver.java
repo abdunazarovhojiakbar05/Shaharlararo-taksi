@@ -43,18 +43,21 @@ public class Driver {
 
     private LocalDateTime expired_at;
 
+    @Enumerated(EnumType.STRING)
     private ApplicationStatus status_application;
 
 
     double rating;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "car_id")
     Cars car;
 
 
+    @Enumerated(EnumType.STRING)
     DriverStatus status;
 
-     private Double currentLat;
-     private Double currentLon;
+    private Double currentLat;
+
+    private Double currentLon;
 }

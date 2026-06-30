@@ -33,7 +33,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
-                .group("auth")
+                .group("static/auth")
                 .pathsToMatch("/api/v1/auth/**")
                 .build();
     }

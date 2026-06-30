@@ -2,6 +2,8 @@ package com.example.taxi_project.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 import java.util.UUID;
 
@@ -18,7 +20,8 @@ public class Cars {
             @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "driver_id")
     Driver driver_id;
 

@@ -34,7 +34,7 @@ public class User {
     private String name;
 
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "car_id")
     private Cars cars;
 

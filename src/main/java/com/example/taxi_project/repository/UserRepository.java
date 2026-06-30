@@ -20,7 +20,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByUsername(String username);
 
-     @Query("SELECT u FROM users  u WHERE u.chat_id = :chatId")
+    Optional<User> findByPhone(String phone);
+
+    @Query("SELECT u FROM users  u WHERE u.chat_id = :chatId")
     Optional<User> findByChatId(@Param("chatId") Long chatId);
 
     Optional<User> findByCode(String code);

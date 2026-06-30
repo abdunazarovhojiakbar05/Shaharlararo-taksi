@@ -5,13 +5,11 @@ import com.example.taxi_project.model.User;
 import jakarta.xml.bind.ValidationException;
 
 public interface AuthService {
-    User data(String firstName, String username, String code, Long chatId) throws ValidationException;
+    User data(String firstName, String username, String code, Long chatId, String phone) throws ValidationException;
 
     void logout(String token);
 
     RefreshTokenResponseDto refreshToken(RefreshTokenRequestDto dto);
-
-    SendOtpResponse registration(RegistrationRequestDto requestDto);
 
     LoginResponseDto verifyOtpCode(VerifyOtpRequest requestDto);
 

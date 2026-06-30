@@ -39,7 +39,7 @@ public class Order {
 
     private Double price;
 
-    private String GroupId;
+    private String groupId;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;

@@ -15,7 +15,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -77,6 +80,11 @@ public class AuthBot extends TelegramLongPollingBot {
             }
         }
 
+        if (update.getMessage().hasContact()) {
+            handleContactReceived(update, chatId);
+            return;
+        }
+
         if (update.getMessage().hasPhoto()) {
             BotState state = userStateMap.get(chatId);
             if (state != null) {
@@ -88,11 +96,35 @@ public class AuthBot extends TelegramLongPollingBot {
         }
     }
 
-    private void handleStartCommand(Update update, long chatId) {
-        org.telegram.telegrambots.meta.api.objects.User tgUser = update.getMessage().getFrom();
-        String firstName = tgUser.getFirstName();
-        String username = tgUser.getUserName();
+    private void requestContact(long chatId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText("📱 Davom etish uchun telefon raqamingizni yuboring:");
 
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(true);
+
+        KeyboardButton contactButton = new KeyboardButton("📱 Raqamni yuborish");
+        contactButton.setRequestContact(true);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add(contactButton);
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row);
+
+        keyboardMarkup.setKeyboard(keyboard);
+        sendMessage.setReplyMarkup(keyboardMarkup);
+
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            log.error("Contact so'rovida xatolik: ", e);
+        }
+    }
+
+    private void handleStartCommand(Update update, long chatId) {
         Optional<User> existing = userRepository.findByChatId(chatId);
 
         if (existing.isPresent() && existing.get().isActive()) {
@@ -104,6 +136,15 @@ public class AuthBot extends TelegramLongPollingBot {
             sendDriverRegistrationMenu(chatId, "⏳ Kod hali amal qilmoqda. 5 daqiqa kuting.\n\nAgar haydovchi sifatida hujjat topshirmoqchi bo'lsangiz, tugmani bosing:");
             return;
         }
+
+        requestContact(chatId);
+    }
+
+    private void handleContactReceived(Update update, long chatId) {
+        org.telegram.telegrambots.meta.api.objects.User tgUser = update.getMessage().getFrom();
+        String firstName = tgUser.getFirstName();
+        String username = tgUser.getUserName();
+        String phone = update.getMessage().getContact().getPhoneNumber();
 
         String code = generateCode();
 
@@ -117,7 +158,7 @@ public class AuthBot extends TelegramLongPollingBot {
                 "🚖 Agar siz <b>Haydovchi</b> sifatida ro'yxatdan o'tmoqchi bo'lsangiz, pastdagi tugmani bosing:";
 
         try {
-            authService.data(firstName, username, code, chatId);
+            authService.data(firstName, username, code, chatId, phone);
             sendDriverRegistrationMenu(chatId, response);
         } catch (ValidationException e) {
             log.error("Validation xatoligi: ", e);
@@ -127,6 +168,7 @@ public class AuthBot extends TelegramLongPollingBot {
             sendMessage(chatId, "❌ Tizimda xatolik yuz berdi.");
         }
     }
+
 
     private void handleCallbackQuery(Update update) {
         String callData = update.getCallbackQuery().getData();
@@ -177,9 +219,11 @@ public class AuthBot extends TelegramLongPollingBot {
                 log.error("Haydovchi arizasini saqlashda xatolik: ", e);
                 sendMessage(chatId, "❌ Arizani yuborishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
             }
-
         }
+
     }
+
+
 
     public void sendMessage(long chatId, String text) {
         SendMessage sendMessage = new SendMessage();

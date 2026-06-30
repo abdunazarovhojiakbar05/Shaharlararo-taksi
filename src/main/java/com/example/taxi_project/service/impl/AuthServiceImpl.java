@@ -1,12 +1,10 @@
 package com.example.taxi_project.service.impl;
 
-import com.example.taxi_project.cofig.GlobalVar;
 import com.example.taxi_project.dto.auth.*;
 import com.example.taxi_project.enums.Platform;
 import com.example.taxi_project.enums.SessionStatus;
 import com.example.taxi_project.enums.UserRole;
 import com.example.taxi_project.exceptions.ResourceNotFoundException;
-import com.example.taxi_project.exceptions.UserAlreadyExistsException;
 import com.example.taxi_project.model.Session;
 import com.example.taxi_project.model.User;
 import com.example.taxi_project.repository.SessionRepository;
@@ -18,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +26,13 @@ public class AuthServiceImpl implements AuthService {
     private final SessionRepository sessionRepository;
 
     @Override
-    public User data(String firstName, String username, String code, Long chatId) throws ValidationException {
+    public User data(String firstName, String username, String code, Long chatId, String phone) throws ValidationException {
         System.out.println("Kod: " + code);
         if (code == null) throw new ValidationException("Kod bo'sh bo'lmasligi kerak");
 
         User user = userRepository.findByChatId(chatId).orElseGet(() -> {
             User newUser = new User();
+            newUser.setPhone(phone);
             newUser.setName(firstName);
             newUser.setUsername(username);
             newUser.setChat_id(chatId);
@@ -51,36 +48,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-
-
-    @Override
-    public SendOtpResponse registration(RegistrationRequestDto requestDto) {
-        String phone = requestDto.getPhone();
-
-        Optional<User> existing = userRepository.findUserByUsername(phone);
-        if (existing.isPresent() && existing.get().isActive()) {
-            throw new UserAlreadyExistsException("Bu raqam allaqachon ro'yxatdan o'tgan: " + phone);
-        }
-
-        String code = String.valueOf(100000 + new Random().nextInt(900000));
-        LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(5);
-
-        User user = existing.orElse(new User());
-        user.setPhone(phone);
-        user.setCode(code);
-        user.setExpired_at(expiredAt);
-        user.setRole(UserRole.USER);
-        user.setActive(false);
-        userRepository.save(user);
-
-
-        System.out.println("Ro'yxatdan o'tish kodi: " + code + " -> " + phone);
-
-        return SendOtpResponse.builder()
-                .access_token(null)
-                .refresh_token(null)
-                .build();
-    }
 
     @Override
     public LoginResponseDto verifyOtpCode(VerifyOtpRequest requestDto) {
@@ -132,18 +99,24 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Refresh token yaroqsiz yoki muddati o'tgan");
         }
 
+        Session session = sessionRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new ResourceNotFoundException("session.not.found"));
+
         String phone = jwtUtils.getUsernameFromToken(refreshToken);
         String newAccess = jwtUtils.generateToken(phone);
         String newRefresh = jwtUtils.generateRefreshToken(phone);
 
-        return   RefreshTokenResponseDto.builder()
+        session.setAccessToken(newAccess);
+        session.setRefreshToken(newRefresh);
+        session.setExpiresAt(LocalDateTime.now().plusDays(1));
+        sessionRepository.save(session);
+
+        return RefreshTokenResponseDto.builder()
                 .refresh_token(newRefresh)
                 .access_token(newAccess)
                 .expires_in(900L)
                 .build();
     }
-
-
 
     @Override
     public void logout(String token) {

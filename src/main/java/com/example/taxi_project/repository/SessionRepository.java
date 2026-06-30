@@ -16,4 +16,6 @@ public interface SessionRepository  extends JpaRepository<Session, UUID> {
     Optional<Object> findByRefreshTokenAndIsActiveTrue(String refreshToken);
 
     Optional<Object> findByUserAndIsActiveTrue(User user);
+
+    Optional<Session> findByRefreshToken(String refreshToken);
 }
