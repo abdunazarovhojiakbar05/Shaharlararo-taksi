@@ -1,0 +1,6 @@
+POST localhost:8080/api/auth/registration
+Content-Type: application/json
+
+{
+  "phone": "+998901619416"
+}
