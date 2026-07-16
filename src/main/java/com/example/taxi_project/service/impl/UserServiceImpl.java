@@ -1,10 +1,12 @@
 package com.example.taxi_project.service.impl;
 
+import com.example.taxi_project.dto.admin.DriverResponseDTO;
 import com.example.taxi_project.dto.order.MyOrdersResponse;
 import com.example.taxi_project.dto.user.DriverApplyRequest;
 import com.example.taxi_project.dto.user.UserResponse;
 import com.example.taxi_project.dto.user.UserUpdate;
 import com.example.taxi_project.exceptions.ResourceNotFoundException;
+import com.example.taxi_project.model.Driver;
 import com.example.taxi_project.model.Order;
 import com.example.taxi_project.model.User;
 import com.example.taxi_project.repository.OrderRepository;
@@ -57,6 +59,24 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public List<UserResponse> getAll() {
+       List<User> users = userRepository.findAll();
+       List<UserResponse> userResponseList = new ArrayList<>();
+
+       for (User user : users) {
+           userResponseList.add(toResponse(user));
+       }
+       return userResponseList;
+    }
+
+    @Override
+    public void setActive(UUID id, boolean active) {
+      User user = userRepository.findUserById(id)
+              .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi:"));
+      user.setActive(active);
+      userRepository.save(user);
+    }
 
 
 

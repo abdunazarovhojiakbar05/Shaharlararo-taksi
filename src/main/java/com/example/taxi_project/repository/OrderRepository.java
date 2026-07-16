@@ -18,6 +18,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByDriverAndStatus(Driver driver, OrderStatus orderStatus);
 
+    List<Order> findByDriverId(UUID driverId);
 
     List<Order> findByUserId(UUID userId);
 }

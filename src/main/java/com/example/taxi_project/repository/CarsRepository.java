@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface DriverCarsRepository extends JpaRepository<Cars, UUID> {
+public interface CarsRepository extends JpaRepository<Cars, UUID> {
 }

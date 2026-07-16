@@ -26,7 +26,7 @@ public class Notification {
 
     UUID user_id;
 
-    UUID child_id;
+    UUID driver_id;
 
     String title;
 

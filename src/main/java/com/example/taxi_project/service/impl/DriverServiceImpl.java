@@ -12,7 +12,7 @@ import com.example.taxi_project.exceptions.UserAlreadyExistsException;
 import com.example.taxi_project.model.Cars;
 import com.example.taxi_project.model.Driver;
 import com.example.taxi_project.model.User;
-import com.example.taxi_project.repository.DriverCarsRepository;
+import com.example.taxi_project.repository.CarsRepository;
 import com.example.taxi_project.repository.DriverRepository;
 import com.example.taxi_project.repository.UserRepository;
 import com.example.taxi_project.security.CustomUserDetails;
@@ -37,7 +37,7 @@ import java.util.UUID;
 public class DriverServiceImpl implements DriverService {
 
     private final DriverRepository driverRepository;
-    private final DriverCarsRepository driverCarsRepository;
+    private final CarsRepository driverCarsRepository;
     private final UserRepository usersRepository;
 
     @Override
@@ -139,14 +139,14 @@ public class DriverServiceImpl implements DriverService {
         List<DriverResponseDTO> list = new ArrayList<>();
         for (User user : all) {
 
-                 DriverResponseDTO driverResponseDTO = DriverResponseDTO.builder()
-                         .name(user.getName())
-                         .phone(user.getPhone())
-                         .passport_image(user.getPassport_image())
-                         .licence_image(user.getLicence_image())
-                         .build();
+            DriverResponseDTO driverResponseDTO = DriverResponseDTO.builder()
+                    .name(user.getName())
+                    .phone(user.getPhone())
+                    .passport_image(user.getPassport_image())
+                    .licence_image(user.getLicence_image())
+                    .build();
 
-                list.add(driverResponseDTO);
+            list.add(driverResponseDTO);
         }
 
         return list;
@@ -221,6 +221,30 @@ public class DriverServiceImpl implements DriverService {
         }
 
         usersRepository.save(user);
+    }
+
+    @Override
+    public List<DriverResponseDTO> getAll() {
+
+        List<Driver> drivers = driverRepository.findAll();
+        List<DriverResponseDTO> list = new ArrayList<>();
+
+        for (Driver driver : drivers) {
+            list.add(DriverResponseDTO.builder()
+                    .name(driver.getName())
+                    .phone(driver.getPhone())
+                    .status_application(driver.getStatus_application())
+                    .username(driver.getUsername()).build());
+        }
+        return list;
+    }
+
+    @Override
+    public void setActive(UUID id, boolean active) {
+           Driver driver =  driverRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("driver.not.found"));
+           driver.setActive(active);
+           driverRepository.save(driver);
     }
 
     private DriverResponse toResponse(Driver driver) {

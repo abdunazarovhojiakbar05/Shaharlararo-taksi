@@ -70,4 +70,20 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi sessionApi() {
+        return GroupedOpenApi.builder()
+                .group("sessions")
+                .pathsToMatch("/api/v1/session/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi notificationApi() {
+        return GroupedOpenApi.builder()
+                .group("notifications")
+                .pathsToMatch("/api/v1/notification/**")
+                .build();
+    }
+
 }

@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorized(
             AuthenticationException ex, HttpServletRequest request) {
         return build(HttpStatus.UNAUTHORIZED,
-                messageService.getMessage("auth.token.invalid"), // ← O'ZGARTIRILDI
+                messageService.getMessage("auth.token.invalid"),
                 request.getRequestURI());
     }
 
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN,
-                messageService.getMessage("auth.access.denied"), // ← O'ZGARTIRILDI
+                messageService.getMessage("auth.access.denied"),
                 request.getRequestURI());
     }
 

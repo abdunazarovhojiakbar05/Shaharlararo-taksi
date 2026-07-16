@@ -17,4 +17,8 @@ public interface UserService {
 
     void delete(UUID id);
 
+
+    List<UserResponse> getAll();
+    void setActive(UUID id, boolean active);
+
  }

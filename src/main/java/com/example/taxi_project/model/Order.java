@@ -53,4 +53,10 @@ public class Order {
 
     private LocalDateTime finishedAt;
 
+    private LocalDateTime cancelledAt;
+
+    private String cancelReason;
+
+    private Integer rating;
+
 }

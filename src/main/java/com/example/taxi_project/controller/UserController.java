@@ -24,11 +24,9 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/user")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UserController {
 
     private final UserService userService;
-    private     final OrderService orderService;
 
 
     @Operation(summary = "Mijozning profil ma'lumotlarini olish")

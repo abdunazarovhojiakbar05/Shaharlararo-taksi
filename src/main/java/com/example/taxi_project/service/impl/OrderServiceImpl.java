@@ -77,8 +77,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<MyOrdersResponse> getMyOrders(CustomUserDetails userDetails) {
-        UUID userId = userDetails.getUser().getId();
-        List<Order> list = orderRepository.findByUserId(userId);
+
+        UUID id = userDetails.isParent() ? userDetails.getUser().getId() : userDetails.getDriver().getId();
+        List<Order> list = userDetails.isParent()
+                ? orderRepository.findByUserId(id)
+                : orderRepository.findByDriverId(id);
         List<MyOrdersResponse> myOrdersResponseList = new ArrayList<>();
 
         for (Order order : list) {
@@ -201,6 +204,71 @@ public class OrderServiceImpl implements OrderService {
 
         String groupId = activeOrders.get(0).getGroupId();
         return getOptimizedPickupRoute(currentLat, currentLon, groupId);
+    }
+
+    @Transactional
+    @Override
+    public Order cancelOrder(UUID orderId, CustomUserDetails userDetails, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ValidationException("Buyurtma topilmadi"));
+
+        if (order.getStatus() == OrderStatus.finished) {
+            throw new ValidationException("Bu buyurtma allaqachon tugagan, uni bekor qilib bo'lmaydi");
+        }
+        if (order.getStatus() == OrderStatus.cancelled) {
+            throw new ValidationException("Bu buyurtma allaqachon bekor qilingan");
+        }
+
+        if (userDetails.isParent()) {
+            if (!order.getUser().getId().equals(userDetails.getUser().getId())) {
+                throw new ValidationException("Bu buyurtma sizga tegishli emas");
+            }
+        } else {
+            if (order.getDriver() == null || !order.getDriver().getId().equals(userDetails.getDriver().getId())) {
+                throw new ValidationException("Bu buyurtma sizga tegishli emas");
+            }
+            if (order.getStatus() != OrderStatus.accepted) {
+                throw new ValidationException("Safar boshlangandan keyin buyurtmani bekor qilib bo'lmaydi");
+            }
+        }
+
+        order.setStatus(OrderStatus.cancelled);
+        order.setCancelledAt(LocalDateTime.now());
+        order.setCancelReason(reason);
+
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    @Override
+    public Order rateOrder(UUID orderId, CustomUserDetails userDetails, int rating) {
+        if (rating < 0 || rating > 5) {
+            throw new ValidationException("Baho 0 dan 5 gacha bo'lishi kerak");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ValidationException("Buyurtma topilmadi"));
+
+        if (!order.getUser().getId().equals(userDetails.getUser().getId())) {
+            throw new ValidationException("Bu buyurtma sizga tegishli emas");
+        }
+        if (order.getStatus() != OrderStatus.finished) {
+            throw new ValidationException("Faqat tugagan safarni baholash mumkin");
+        }
+        if (order.getRating() != null) {
+            throw new ValidationException("Bu buyurtma allaqachon baholangan");
+        }
+
+        order.setRating(rating);
+        orderRepository.save(order);
+
+        Driver driver = order.getDriver();
+        double newAvg = (driver.getRating() * driver.getRatingCount() + rating) / (double) (driver.getRatingCount() + 1);
+        driver.setRating(newAvg);
+        driver.setRatingCount(driver.getRatingCount() + 1);
+        driverRepository.save(driver);
+
+        return order;
     }
 
     private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {

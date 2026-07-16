@@ -1,7 +1,7 @@
 package com.example.taxi_project.dto.order;
- import com.example.taxi_project.enums.OrderStatus;
- import lombok.*;
-import java.math.BigDecimal;
+
+import com.example.taxi_project.enums.OrderStatus;
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 

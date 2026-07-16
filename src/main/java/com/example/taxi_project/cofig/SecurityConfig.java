@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Ortiqcha cast qilish olib tashlandi, endi avtomat taniydi
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .csrf(AbstractHttpConfigurer::disable)
@@ -41,10 +41,6 @@ public class SecurityConfig {
                                 "/swagger-resources/**", "/webjars/**",
                                 "/error"
                         ).permitAll()
-                        // SecurityConfig ichida vaqtincha o'zgartiring:
-// SecurityConfig ichidagi orders cheklovlarini vaqtincha bunga almashtiring:
-                                .requestMatchers("/api/v1/orders/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/v1/orders/pending").hasRole("DRIVER")
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/driver/**").hasRole("DRIVER")

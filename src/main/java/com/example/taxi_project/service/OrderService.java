@@ -26,4 +26,8 @@ public interface OrderService {
     List<Order> findByStatus(OrderStatus orderStatus);
 
     List<Order> getDriverCurrentRoute(CustomUserDetails userDetails, double currentLat, double currentLon);
+
+    Order cancelOrder(UUID id, CustomUserDetails userDetails, String reason);
+
+    Order rateOrder(UUID id, CustomUserDetails userDetails, int rating);
 }

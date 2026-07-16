@@ -35,4 +35,8 @@ public interface DriverService {
     void approveDriver(UUID userId) throws ValidationException;
 
     void rejectDriver(UUID userId, String reason);
+
+    List<DriverResponseDTO> getAll();
+
+    void setActive(UUID id, boolean active);
 }

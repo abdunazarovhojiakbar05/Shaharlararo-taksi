@@ -60,4 +60,8 @@ public class Driver {
     private Double currentLat;
 
     private Double currentLon;
+
+    @Column(columnDefinition = "integer default 0")
+    private int ratingCount;
+
 }
